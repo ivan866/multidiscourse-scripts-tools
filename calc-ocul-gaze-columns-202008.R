@@ -5,15 +5,16 @@ pears.ocul.gaze.flist <- readLines(paste(dataset.dir, 'pears-ocul-gaze-list.txt'
 
 #require(data.table); require(tibble)
 require(XLConnect)
-require(readxl)
-require(openxlsx)
+#require(readxl)
+#require(openxlsx)
 #NOTE milli-second accuracy; very important option for time parsing
 #NOTE  may also use %OS3 format specifier instead
-options(digits.secs=3, scipen=15)
+#options(digits.secs=3, scipen=15)
 options(tibble.pillar.subtle=FALSE, tibble.pillar.sigfig=9, tibble.pillar.min_title_chars=10)
-options(openxlsx.numFmt=NULL,
-        openxlsx.dateFormat='yyyy-mm-dd', openxlsx.datetimeFormat='mm:ss.000',
-        openxlsx.borderColour='#ff0000')
+options(XLConnect.dateTimeFormat='%M:%OS3')
+#options(openxlsx.numFmt=NULL,
+#        openxlsx.dateFormat='yyyy-mm-dd', openxlsx.datetimeFormat='mm:ss.000',
+#        openxlsx.borderColour='#ff0000')
 
 fname <- pears.ocul.gaze.flist[1]
 print(paste('excel file processing script; pears-ocul-gaze; 202008', sep=''))
@@ -31,7 +32,12 @@ df <- read.xlsx(fname, sheet=1,
 df = read_excel(fname, sheet=1, col_names=FALSE,
                 col_types=c('numeric', 'numeric', 'numeric', 'text', 'text', 'numeric', 'text', 'numeric', 'text'),
                 trim_ws=TRUE)
-wb <- loadWorkbook(fname)
+wb <- loadWorkbook(fname, create=FALSE, password=NULL)
+sheet = readWorksheet(wb, sheet=1, header=FALSE, rownames=NULL, colTypes=c('numeric', 'character', 'numeric', 'character', 'character', 'numeric', 'character', 'numeric', 'character'), dateTimeFormat='%M:%OS3')
+createSheet(wb, name='mysheet02')
+writeWorksheet(wb, df, 1, startRow=1, startCol=1, header=FALSE)
+@writeWorksheetToFile(fname, df, 1, startRow=1, startCol=1)
+saveWorkbook(wb)
 
 wb <- write.xlsx(df, file='myexcel.xlsx', asTable=FALSE,
                  startRow=1, startCol=1,
