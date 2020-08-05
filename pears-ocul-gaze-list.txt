@@ -1,1 +1,13 @@
-e:/projects/archive2017/multidiscourse/text/pears06-N-ocul-gaze.xlsx
+e:/projects/archive2017/multidiscourse/text/pears04-N-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears04-R-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears06-R-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears16-N-ocul.xls
+e:/projects/archive2017/multidiscourse/text/pears16-R-ocul.xls
+e:/projects/archive2017/multidiscourse/text/pears21-N-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears21-R-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears22-N-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears22-R-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears23-N-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears23-R-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears24-N-ocul.xlsx
+e:/projects/archive2017/multidiscourse/text/pears24-R-ocul.xlsx
