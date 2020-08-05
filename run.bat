@@ -1,0 +1,1 @@
+c:/Users/ivan866/Anaconda3/envs/rstudio/lib/R/bin/R.exe CMD BATCH calc-ocul-gaze-columns-202008.R

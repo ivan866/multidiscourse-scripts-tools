@@ -1,54 +1,63 @@
 Sys.setenv(JAVA_HOME="c:/Program Files/Java/jdk-11.0.1/")
 dataset.dir <- 'e:/projects/archive2017/multidiscourse/text/'
-setwd(dataset.dir)
 pears.ocul.gaze.flist <- readLines(paste(dataset.dir, 'pears-ocul-gaze-list.txt', sep=''))
+setwd(dataset.dir)
+#log.fname <- file("_report.log", open='wt')
+new.sheet.name <- 'calc-ocul-gaze'
 
-#require(data.table); require(tibble)
+#FIXME R CMD BATCH calc-ocul-gaze-columns-202008.R
+#NOTE single-runtime version; R runtime gets a filelist, and runs a for loop
+#  contrary to multiple-runtime, when multiple R instances are called from .bat file in parallel
 require(XLConnect)
-#require(readxl)
-#require(openxlsx)
 #NOTE milli-second accuracy; very important option for time parsing
 #NOTE  may also use %OS3 format specifier instead
-#options(digits.secs=3, scipen=15)
+#NOTE options -> encoding='UTF-8'
+options(digits.secs=3, scipen=15)
 options(tibble.pillar.subtle=FALSE, tibble.pillar.sigfig=9, tibble.pillar.min_title_chars=10)
-options(XLConnect.dateTimeFormat='%M:%OS3')
-#options(openxlsx.numFmt=NULL,
-#        openxlsx.dateFormat='yyyy-mm-dd', openxlsx.datetimeFormat='mm:ss.000',
-#        openxlsx.borderColour='#ff0000')
+#options(XLConnect.dateTimeFormat='%M:%OS')
 
-fname <- pears.ocul.gaze.flist[1]
-print(paste('excel file processing script; pears-ocul-gaze; 202008', sep=''))
-print(paste('reading file: ', fname, sep=''))
-print(paste('format is: ', excel_format(fname), sep=''))
-print(paste('converting time, origin is: ', getDateOrigin(fname), sep=''))
-print(paste('file contains sheets: ', excel_sheets(fname), sep=''))
-
-df <- read.xlsx(fname, sheet=1,
-                startRow=1, colNames=FALSE, rowNames=FALSE,
-                detectDates=FALSE, check.names=FALSE, na.strings='',
-                skipEmptyRows=FALSE, skipEmptyCols=FALSE)
-#NOTE we treat custom time format as numeric, then manually convert to s.f format (like in pandas)
-#  then, on saving, format as human-readable MM:SS.000 again
-df = read_excel(fname, sheet=1, col_names=FALSE,
-                col_types=c('numeric', 'numeric', 'numeric', 'text', 'text', 'numeric', 'text', 'numeric', 'text'),
-                trim_ws=TRUE)
-wb <- loadWorkbook(fname, create=FALSE, password=NULL)
-sheet = readWorksheet(wb, sheet=1, header=FALSE, rownames=NULL, colTypes=c('numeric', 'character', 'numeric', 'character', 'character', 'numeric', 'character', 'numeric', 'character'), dateTimeFormat='%M:%OS3')
-createSheet(wb, name='mysheet02')
-writeWorksheet(wb, df, 1, startRow=1, startCol=1, header=FALSE)
-@writeWorksheetToFile(fname, df, 1, startRow=1, startCol=1)
-saveWorkbook(wb)
-
-wb <- write.xlsx(df, file='myexcel.xlsx', asTable=FALSE,
-                 startRow=1, startCol=1,
-                 rowNames=FALSE, colNames=FALSE, keepNA=FALSE,
-                 overwrite=TRUE)
-#setColWIdths(wb, sheet=1, cols=1:5, widths=20)
-#saveWorkbook(wb, fname, overwrite=TRUE)
-
-#addWorksheet(wb, sheetName='', gridLines=TRUE)
-#freezePane(wb, sheet=1, firstRow=TRUE, firstCol=TRUE)
-#writeData(wb, sheet=1, x=df, startRow, startCol)
-#writeDataTable(wb, sheet=1, x=df, rowNames=TRUE, colnames=TRUE, tableStyle='TableStyleLight9')
-#  startRow, startCol
-#insertPlot(wb, sheet, xy=c('C', 4))
+print(paste('#### excel file processing script; pears-ocul-gaze; 202008 ####', sep=''))
+print(paste('#### ', Sys.Date(), ' ####', sep=''))
+for(fname in pears.ocul.gaze.flist) {
+  t.start <- Sys.time()
+  print(paste('#### ', format(t.start, '%T %z'), ' ####', sep=''))
+  wb <- loadWorkbook(fname, create=FALSE, password=NULL)
+  print(summary(wb))
+  #NOTE we treat custom time format as character, then manually convert to s.f format (like in pandas)
+  #  then, on saving, format as human-readable MM:SS.000 again
+  #FIXME col B to strptime
+  #NOTE trim newlines, #SEE python same problem occured
+  #read
+  df = readWorksheet(wb, sheet=1, header=FALSE, rownames=NULL,
+                     colTypes=c('numeric', 'character', 'numeric', 'factor', 'factor', 'character'),
+                     dateTimeFormat='%M:%OS')
+  print('#### sanity check: ####')
+  print(paste('col A: all indices are sequential: ', all(diff(df[,1])==1), sep=''))
+  #TODO print(paste('col B: all times are rising: ', '#TODO', sep=''))
+  print(paste('col D: unique names: ', paste(unique(df[,4]), collapse=','), sep=''))
+  print(paste('col E: unique names: ', paste(unique(df[,5]), collapse=','), sep=''))
+  #process
+  col.B <- strptime(df[,2], format='%M:%OS', tz='Europe/Moscow')
+  col.D.change.ind <- c(1, which(diff(as.numeric(as.factor(df[,4])))!=0)+1)
+  col.D.change.ind.second <- c(col.D.change.ind[-1]-1, nrow(df))
+  ind.seq <- seq_along(col.D.change.ind)
+  df[col.D.change.ind, 6] <- ind.seq
+  df[col.D.change.ind, 7] <- df[col.D.change.ind, 4]
+  for(n in ind.seq) {
+    df[col.D.change.ind[n], 8] <- sum(df[col.D.change.ind[n]:col.D.change.ind.second[n], 3])
+  }
+  print('#### all calculation done ####')
+  #write
+  my.df <- createSheet(wb, name=new.sheet.name)
+  #existsSheet()
+  #setActiveSheet()
+  #setDataFormatForType(wb, type=XLC$"DATA_TYPE.NUMERIC", format="0.0000")
+  #setFillForegroundColor(header, color=XLC$COLOR.GREY_25_PERCENT)
+  #setSheetPos()
+  writeWorksheet(wb, data=df, sheet=new.sheet.name, startRow=1, startCol=1, header=FALSE, rownames=NULL)
+  saveWorkbook(wb)
+  print('#### workbook updated! ####')
+  print(paste('time elapsed: ', format(difftime(Sys.time(), t.start, units=c('secs')), digits=4), sep=''))
+}
+#sink(log.fname, type=c('output', 'message'), split=TRUE, append=FALSE)
+#close(log.fname)
