@@ -1,4 +1,7 @@
 2020.08.05
+o установить Java; oracle.com/in/java/
+  установить R; r-project.org
+
 o обратите внимание, что скрипту требуется установленный пакеты XLConnect, readxl для чтения и openxlsx для записи экселевских файлов
   для этого надо набрать в R следующую команду:
 install.packages(c('tibble', 'readxl', 'XLConnect', 'rJava', 'openxlsx'), dependencies = c('depends','imports'))
